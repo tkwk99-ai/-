@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한기대 독서인증제 '다담' & 학기별 독서 대시보드</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter & Noto Sans KR) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    },
+                    colors: {
+                        kut: {
+                            blue: '#003876',
+                            orange: '#F26522',
+                            lightBg: '#F8FAFC',
+                            navy: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printArea, #printArea * {
+                visibility: visible;
+            }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 10px;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col selection:bg-blue-100 selection:text-kut-blue">
+
+    <header class="bg-kut-blue text-white shadow-md sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo & App Title -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="bg-white/10 p-2 rounded-lg border border-white/20">
+                        <i class="fa-solid me-1 fa-book-bookmark text-kut-orange text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide flex items-center gap-2">
+                            한기대 독서인증제 <span class="text-xs bg-kut-orange px-2 py-0.5 rounded text-white font-semibold">다담 (DADAM)</span>
+                        </h1>
+                        <p class="text-xs text-blue-200">KOREATECH PLAN 필독서 100선 A/B파트 & 학기별 대시보드</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 bg-white/10 text-white">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>대시보드 & 목록</span>
+                    </button>
+                    <button onclick="switchTab('editor')" id="nav-editor" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-blue-100 hover:bg-white/10">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>활동지 작성기</span>
+                    </button>
+                    <button onclick="switchTab('curation')" id="nav-curation" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-blue-100 hover:bg-white/10">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>한기대 필독서 100선 (A/B)</span>
+                    </button>
+                    <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 text-blue-100 hover:bg-white/10">
+                        <i class="fa-solid fa-id-card"></i>
+                        <span>인적사항 설정</span>
+                    </button>
+                </nav>
+
+                <!-- Mobile menu toggle -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="p-2 rounded-md text-blue-200 hover:text-white hover:bg-white/10 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobileNav" class="hidden md:hidden bg-blue-900 border-t border-blue-800 px-4 pt-2 pb-4 space-y-1">
+            <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-800 flex items-center space-x-2">
+                <i class="fa-solid fa-chart-pie w-5"></i><span>대시보드 & 목록</span>
+            </button>
+            <button onclick="switchTab('editor'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-800 flex items-center space-x-2">
+                <i class="fa-solid fa-pen-to-square w-5"></i><span>활동지 작성기</span>
+            </button>
+            <button onclick="switchTab('curation'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-800 flex items-center space-x-2">
+                <i class="fa-solid fa-list-check w-5"></i><span>한기대 필독서 100선 (A/B)</span>
+            </button>
+            <button onclick="switchTab('profile'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-blue-800 flex items-center space-x-2">
+                <i class="fa-solid fa-id-card w-5"></i><span>인적사항 설정</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+
+        <!-- TAB 1: DASHBOARD & BOOK LIST -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Top Summary Widgets -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-blue-50 text-kut-blue flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">총 등록 도서</p>
+                        <h3 id="statTotalBooks" class="text-2xl font-bold text-slate-800">0권</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">활동지 작성 완료</p>
+                        <h3 id="statCompletedForms" class="text-2xl font-bold text-slate-800">0권</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">현재 예상 급수</p>
+                        <h3 id="statGradeLevel" class="text-2xl font-bold text-slate-800">- 급</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-lg bg-orange-50 text-kut-orange flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-user-graduate"></i>
+                    </div>
+                    <div class="truncate">
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">제출자 정보</p>
+                        <h3 id="statStudentName" class="text-base font-bold text-slate-800 truncate">미설정</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Semester Reading Breakdown Progress Section -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-kut-blue"></i> 학기별 독서 달성 현황
+                    </h2>
+                    <span id="semesterProgressSummary" class="text-xs text-slate-500 font-medium">총 0개 학기 독서 기록 보유</span>
+                </div>
+                <div id="semesterStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
+                    <!-- Dynamic rendering of semester progress cards -->
+                </div>
+            </div>
+
+            <!-- Controls & Semester Filter -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-semibold text-slate-700 whitespace-nowrap"><i class="fa-solid fa-filter text-slate-400 mr-1"></i>학기 선택:</label>
+                        <select id="filterSemester" onchange="renderBookList()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="ALL">전체 학기 보기</option>
+                            <option value="1-1">1학년 1학기</option>
+                            <option value="1-2">1학년 2학기</option>
+                            <option value="2-1">2학년 1학기</option>
+                            <option value="2-2">2학년 2학기</option>
+                            <option value="3-1">3학년 1학기</option>
+                            <option value="3-2">3학년 2학기</option>
+                            <option value="4-1">4학년 1학기</option>
+                            <option value="4-2">4학년 2학기</option>
+                            <option value="OTHER">기타/방학</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-semibold text-slate-700 whitespace-nowrap">상태:</label>
+                        <select id="filterStatus" onchange="renderBookList()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="ALL">전체 상태</option>
+                            <option value="READING">읽는 중</option>
+                            <option value="DRAFT">활동지 작성 중</option>
+                            <option value="COMPLETED">작성 완료 (제출 준비)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-semibold text-slate-700 whitespace-nowrap"><i class="fa-solid fa-arrow-down-a-z text-slate-400 mr-1"></i>정렬:</label>
+                        <select id="myBookSort" onchange="renderBookList()" class="bg-slate-50 border border-slate-300 rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="NAME_ASC">가나다순 (ㄱ~ㅎ)</option>
+                            <option value="NEWEST">최근 등록순</option>
+                            <option value="NAME_DESC">하타가순 (ㅎ~ㄱ)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                    <button onclick="openNewBookModal()" class="w-full md:w-auto px-4 py-2 bg-kut-blue hover:bg-blue-900 text-white rounded-lg text-sm font-medium transition shadow flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>새 도서 등록</span>
+                    </button>
+                    <button onclick="exportDataJSON()" title="데이터 내보내기" class="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 text-sm">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                    <label title="데이터 불러오기" class="px-3 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 text-sm cursor-pointer">
+                        <i class="fa-solid fa-upload"></i>
+                        <input type="file" id="importFile" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Reading Books List Table / Cards -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-books text-kut-blue"></i> 내 독서목록 & 활동지 현황
+                    </h2>
+                    <span id="bookCountBadge" class="text-xs bg-slate-200 text-slate-700 font-semibold px-2.5 py-1 rounded-full">0 권</span>
+                </div>
+
+                <div id="bookListContainer" class="divide-y divide-slate-200 min-h-[250px]">
+                    <!-- Dynamic book items rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: DADAM REPORT EDITOR -->
+        <section id="tab-editor" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200 gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-kut-orange/10 text-kut-orange font-bold text-xs px-2.5 py-1 rounded-full">독서인증제 '다담' 활동지</span>
+                            <span id="editingBookStatus" class="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded">작성 중</span>
+                        </div>
+                        <h2 id="editorTitleHeading" class="text-xl font-bold text-slate-800 mt-1">도서 활동지 작성</h2>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="aiHelpPrompt()" class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm flex items-center space-x-1.5 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>AI 작성 가이드</span>
+                        </button>
+                        <button onclick="saveCurrentForm()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-sm font-medium shadow-sm flex items-center space-x-1">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>임시 저장</span>
+                        </button>
+                        <button onclick="previewAndPrint()" class="px-4 py-2 bg-kut-blue hover:bg-blue-900 text-white rounded-lg text-sm font-medium shadow-sm flex items-center space-x-1">
+                            <i class="fa-solid fa-print"></i>
+                            <span>양식 미리보기/인쇄</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Inputs Grid -->
+                <form id="dadamForm" onsubmit="event.preventDefault();" class="space-y-6">
+                    <input type="hidden" id="editBookId" value="">
+
+                    <!-- Section A: Target Book Info -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">도서명 *</label>
+                            <input type="text" id="formBookTitle" required placeholder="예: 클린 코드 (Clean Code)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">저자 *</label>
+                            <input type="text" id="formBookAuthor" required placeholder="예: 로버트 C. 마틴" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">읽은 학기 *</label>
+                            <select id="formBookSemester" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                                <option value="1-1">1학년 1학기</option>
+                                <option value="1-2">1학년 2학기</option>
+                                <option value="2-1">2학년 1학기</option>
+                                <option value="2-2">2학년 2학기</option>
+                                <option value="3-1">3학년 1학기</option>
+                                <option value="3-2">3학년 2학기</option>
+                                <option value="4-1">4학년 1학기</option>
+                                <option value="4-2">4학년 2학기</option>
+                                <option value="OTHER">기타/방학</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"><i class="fa-regular fa-calendar-check mr-1 text-kut-blue"></i>읽기 시작일</label>
+                            <input type="date" id="formStartDate" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"><i class="fa-solid fa-calendar-check mr-1 text-emerald-600"></i>읽기 완료일</label>
+                            <input type="date" id="formEndDate" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Summary & Impressions -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-align-left text-kut-blue"></i>
+                                1. 내용 요약 및 감상
+                            </label>
+                            <span class="text-xs text-slate-500">
+                                (기준: <span class="font-semibold text-slate-700">500자 내외</span>) 
+                                | 현재: <span id="cntSummary" class="font-bold text-blue-600">0</span>자
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500">책의 주요 내용 요약과 전체적인 느낌, 얻은 교훈을 균형있게 기술하세요.</p>
+                        <textarea id="formSummary" rows="6" oninput="updateCharCounts()" placeholder="도서의 핵심 주제 및 내용을 요약하고 본인의 전체적인 감상을 작성하세요..." class="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none custom-scrollbar leading-relaxed"></textarea>
+                    </div>
+
+                    <!-- Section 2: Memorable Quote & Reason -->
+                    <div class="space-y-3 bg-amber-50/50 p-4 rounded-xl border border-amber-200/60">
+                        <div class="flex justify-between items-center">
+                            <label class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left text-amber-600"></i>
+                                2. 인상 깊은 문장 (또는 구절) 및 그 이유
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">• 인상 깊은 문장 (또는 구절)</label>
+                            <input type="text" id="formQuote" placeholder="책에서 가장 감명 깊거나 인상적인 구절을 입력하세요..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-slate-700">• 이유 작성 (필수: 200자 이상)</label>
+                                <span id="badgeReason" class="text-xs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600">
+                                    <span id="cntReason">0</span> / 200자 미달
+                                </span>
+                            </div>
+                            <textarea id="formQuoteReason" rows="4" oninput="updateCharCounts()" placeholder="위 구절을 선택한 이유와 나에게 준 영향 및 솔직한 느낌을 200자 이상으로 기술하세요..." class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none custom-scrollbar leading-relaxed"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Social Issue / Experience / Evaluation -->
+                    <div class="space-y-2 bg-blue-50/40 p-4 rounded-xl border border-blue-200/60">
+                        <div class="flex justify-between items-center">
+                            <label class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-newspaper text-kut-blue"></i>
+                                3. 책 내용과 관련된 사회 이슈·경험담 기술 / 본인의 의견과 평가
+                            </label>
+                            <span id="badgeSocial" class="text-xs px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600">
+                                <span id="cntSocial">0</span> / 500자 미달
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500">책의 주제와 연결시킬 수 있는 현대 사회적 문제, 본인의 실제 관련 경험, 전공 시사점 또는 가치관 평가를 500자 이상 깊이 있게 작성하세요.</p>
+                        <textarea id="formSocialIssue" rows="7" oninput="updateCharCounts()" placeholder="책의 내용과 연계된 최근 사회 이슈, 개인적 경험담, 비판적 시각 및 평가를 500자 이상 논리적으로 기술하세요..." class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none custom-scrollbar leading-relaxed"></textarea>
+                    </div>
+
+                    <!-- Bottom Form Submission Controls -->
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+                        <button type="button" onclick="resetForm()" class="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium">
+                            초기화
+                        </button>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="saveCurrentForm('DRAFT')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-sm font-medium">
+                                임시 저장
+                            </button>
+                            <button type="button" onclick="saveCurrentForm('COMPLETED')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow flex items-center space-x-1.5">
+                                <i class="fa-solid fa-check"></i>
+                                <span>작성 완료 등록</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 3: KOREATECH RECOMMENDED BOOKS 100선 (A/B PARTS TOTAL 200) -->
+        <section id="tab-curation" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 mb-6 gap-4">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-kut-orange text-white text-xs px-2.5 py-0.5 rounded-full font-bold">KOREATECH PLAN</span>
+                            <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                필독서 100선 (1학기 A파트 100권 / 2학기 B파트 100권)
+                            </h2>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">한국기술교육대학교 독서인증제 심사 대상 전체 200권의 추천 필독서 목록입니다.</p>
+                    </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="relative w-full sm:w-56">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="curationSearchInput" oninput="onCurationFilterChange()" placeholder="도서명 또는 저자 검색..." class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+
+                        <select id="curationSortOption" onchange="onCurationFilterChange()" class="bg-slate-50 border border-slate-300 rounded-lg text-xs px-3 py-1.5 font-bold text-slate-700 focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="NAME_ASC">가나다순 (ㄱ~ㅎ)</option>
+                            <option value="NUM_ASC">기본 추천순 (번호순)</option>
+                            <option value="NAME_DESC">하타가순 (ㅎ~ㄱ)</option>
+                        </select>
+
+                        <select id="curationPartFilter" onchange="onCurationFilterChange()" class="bg-slate-50 border border-slate-300 rounded-lg text-xs px-3 py-1.5 font-bold text-kut-blue focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="ALL">전체 학기 (총 200권)</option>
+                            <option value="A">1학기 심사도서 (A파트 100권)</option>
+                            <option value="B">2학기 심사도서 (B파트 100권)</option>
+                        </select>
+
+                        <select id="curationCategoryFilter" onchange="onCurationFilterChange()" class="bg-slate-50 border border-slate-300 rounded-lg text-xs px-3 py-1.5 focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="ALL">전체 분야</option>
+                            <option value="TECH">공학 / IT / 자연과학</option>
+                            <option value="HUMANITIES">인문 / 철학 / 역사</option>
+                            <option value="SOCIETY">사회 / 경제 / 경영</option>
+                            <option value="ART">예술 / 문학 / 교양</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ㄱ ㄴ ㄷ... Korean Alphabetical Quick Filter Bar -->
+                <div class="mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div class="text-xs font-bold text-slate-600 mb-2 flex items-center justify-between">
+                        <span><i class="fa-solid fa-arrow-down-a-z text-kut-blue mr-1"></i> 초성 단축 검색 (ㄱ ㄴ ㄷ 색인)</span>
+                        <span id="activeInitialLabel" class="text-[11px] text-kut-orange font-semibold">전체 보기</span>
+                    </div>
+                    <div id="hangulFilterContainer" class="flex flex-wrap gap-1">
+                        <!-- Dynamic Hangul Initial Consonant Buttons -->
+                    </div>
+                </div>
+
+                <!-- Curation Summary Header Bar -->
+                <div class="flex justify-between items-center mb-4 text-xs font-semibold text-slate-600 bg-slate-50 px-4 py-2.5 rounded-lg border border-slate-200">
+                    <div>
+                        검색 결과: <span id="curationResultCount" class="font-bold text-kut-blue text-sm">0</span> 권
+                    </div>
+                    <div id="curationPartNotice" class="text-slate-500">
+                        ※ 1학기에는 A파트 도서, 2학기에는 B파트 도서 위주로 신청 가능합니다.
+                    </div>
+                </div>
+
+                <!-- Grid Container for Curated Books -->
+                <div id="curationContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px]">
+                    <!-- Dynamic rendering of curated books -->
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="curationPagination" class="flex justify-center items-center space-x-2 pt-6 border-t border-slate-200 mt-6">
+                    <!-- Dynamic Pagination -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: STUDENT PROFILE SETTINGS -->
+        <section id="tab-profile" class="tab-content hidden space-y-6">
+            <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <div class="border-b border-slate-200 pb-4 mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-kut-blue"></i>
+                        제출자 인적 사항 설정
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">이 정보는 독서인증제 '다담' 활동지 표지 및 상단 인적사항란에 자동으로 반영됩니다.</p>
+                </div>
+
+                <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">성명 *</label>
+                            <input type="text" id="profName" required placeholder="예: 홍길동" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">학번 *</label>
+                            <input type="text" id="profStudentId" required placeholder="예: 2024136000" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">학부(과) *</label>
+                            <input type="text" id="profDept" required placeholder="예: 컴퓨터공학부 / 기계공학부" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">연락처 *</label>
+                            <input type="text" id="profPhone" placeholder="예: 010-1234-5678" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mt-4">
+                        <label class="block text-xs font-bold text-slate-700 mb-2">※ 이전 독서인증 경험이 있는 경우 작성</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-slate-600 mb-1">통과 완료 책 수 (권)</label>
+                                <input type="number" id="profPassedCount" min="0" placeholder="0" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-600 mb-1">현재/이전 통과 급수</label>
+                                <input type="text" id="profPassedGrade" placeholder="예: 3급 또는 미통과" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" class="px-6 py-2.5 bg-kut-blue hover:bg-blue-900 text-white font-medium text-sm rounded-lg shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-check"></i>
+                            <span>인적사항 저장하기</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- OFFICIAL DADAM PRINT FORM -->
+    <div id="printModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col my-auto border border-slate-300">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-kut-blue text-white text-xs px-2.5 py-1 rounded-md font-bold">인쇄/제출용 표준 양식</span>
+                    <h3 class="font-bold text-slate-800 text-base">독서인증제 '다담' 활동지 미리보기</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="triggerPrint()" class="px-4 py-1.5 bg-kut-orange hover:bg-orange-600 text-white rounded-lg text-sm font-semibold shadow transition flex items-center space-x-1">
+                        <i class="fa-solid fa-print"></i>
+                        <span>인쇄하기 / PDF 저장</span>
+                    </button>
+                    <button onclick="closePrintModal()" class="text-slate-400 hover:text-slate-600 p-2 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Printable Preview Content Area -->
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-100">
+                <div id="printArea" class="bg-white p-8 border border-slate-300 shadow-md max-w-[210mm] mx-auto text-slate-900 text-sm font-serif leading-relaxed">
+                    <!-- Title Header -->
+                    <div class="text-center mb-6">
+                        <h2 class="text-2xl font-bold tracking-widest text-black underline decoration-2 underline-offset-8">독서인증제 '다담'</h2>
+                    </div>
+
+                    <!-- Table 1: Submitter Info -->
+                    <table class="w-full border-collapse border border-black text-center text-xs mb-4">
+                        <tbody>
+                            <tr>
+                                <th class="border border-black bg-slate-100 p-2 font-bold w-1/6" rowspan="2">제출자<br>인적 사항</th>
+                                <th class="border border-black bg-slate-100 p-2 font-semibold w-1/6">성명</th>
+                                <td id="pvName" class="border border-black p-2 font-sans w-1/3"></td>
+                                <th class="border border-black bg-slate-100 p-2 font-semibold w-1/6">학번</th>
+                                <td id="pvStudentId" class="border border-black p-2 font-sans w-1/6"></td>
+                            </tr>
+                            <tr>
+                                <th class="border border-black bg-slate-100 p-2 font-semibold">학부(과)</th>
+                                <td id="pvDept" class="border border-black p-2 font-sans"></td>
+                                <th class="border border-black bg-slate-100 p-2 font-semibold">연락처</th>
+                                <td id="pvPhone" class="border border-black p-2 font-sans"></td>
+                            </tr>
+                            <tr>
+                                <th class="border border-black bg-slate-100 p-2 font-xs leading-tight">※독서인증 경험이<br>있는 경우 작성</th>
+                                <th class="border border-black bg-slate-100 p-2 font-semibold">통과 책수/급수</th>
+                                <td colspan="3" class="border border-black p-2 text-left font-sans px-4">
+                                    통과 책 수: <span id="pvPassedCount" class="font-bold underline px-1"></span> 권 / 현재 급수: <span id="pvPassedGrade" class="font-bold underline px-1"></span> 급
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Section Header -->
+                    <div class="bg-slate-200 border border-black text-center font-bold py-1 text-sm mb-4">
+                        독서 활동지
+                    </div>
+
+                    <!-- Book Title & Author -->
+                    <table class="w-full border-collapse border border-black text-xs mb-4">
+                        <tbody>
+                            <tr>
+                                <th class="border border-black bg-slate-100 p-2 font-bold w-1/6 text-center">도서명</th>
+                                <td id="pvBookTitle" class="border border-black p-2 font-bold font-sans w-1/3"></td>
+                                <th class="border border-black bg-slate-100 p-2 font-bold w-1/6 text-center">저자</th>
+                                <td id="pvBookAuthor" class="border border-black p-2 font-sans w-1/3"></td>
+                            </tr>
+                            <tr>
+                                <th class="border border-black bg-slate-100 p-2 font-bold text-center">읽은 학기</th>
+                                <td id="pvBookSemester" class="border border-black p-2 font-sans"></td>
+                                <th class="border border-black bg-slate-100 p-2 font-bold text-center">독서 기간</th>
+                                <td id="pvReadingDates" class="border border-black p-2 font-sans"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Content Section 1: Summary -->
+                    <div class="border border-black mb-4">
+                        <div class="border-b border-black bg-slate-100 px-3 py-1.5 font-bold text-xs flex justify-between items-center">
+                            <span>내용 요약 및 감상</span>
+                            <span class="font-normal text-[11px] text-slate-600">500자 내외로 작성</span>
+                        </div>
+                        <div id="pvSummary" class="p-3 whitespace-pre-wrap text-xs font-sans min-h-[140px] leading-relaxed"></div>
+                    </div>
+
+                    <!-- Content Section 2: Memorable Quote -->
+                    <div class="border border-black mb-4">
+                        <div class="border-b border-black bg-slate-100 px-3 py-1.5 font-bold text-xs">
+                            인상 깊은 문장(또는 구절) 및 그 이유
+                        </div>
+                        <div class="p-3 border-b border-black text-xs font-sans">
+                            <span class="font-bold block mb-1">• 인상 깊은 문장 (또는 구절):</span>
+                            <blockquote id="pvQuote" class="italic bg-slate-50 p-2 border-l-2 border-slate-400"></blockquote>
+                        </div>
+                        <div class="p-3 text-xs font-sans">
+                            <span class="font-bold block mb-1">• 이유 (200자 이상 작성):</span>
+                            <div id="pvQuoteReason" class="whitespace-pre-wrap min-h-[100px] leading-relaxed"></div>
+                        </div>
+                    </div>
+
+                    <!-- Content Section 3: Social Issue -->
+                    <div class="border border-black">
+                        <div class="border-b border-black bg-slate-100 px-3 py-1.5 font-bold text-xs flex justify-between items-center">
+                            <span>책 내용과 관련된 사회 이슈·경험담 기술 / 본인의 의견과 평가</span>
+                            <span class="font-normal text-[11px] text-slate-600">500자 이상 작성</span>
+                        </div>
+                        <div id="pvSocialIssue" class="p-3 whitespace-pre-wrap text-xs font-sans min-h-[180px] leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI ASSISTANT MODAL -->
+    <div id="aiModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4 border border-purple-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2 text-purple-700">
+                    <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                    <h3 class="font-bold text-lg text-slate-800">AI 독서 감상 작성 가이드</h3>
+                </div>
+                <button onclick="closeAiModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed">
+                현재 선택된 도서(<strong id="aiBookNameText" class="text-purple-700">도서명</strong>)의 독서인증 활동지 구성을 위한 아이디어 및 작성 팁을 Gemini AI가 생성해드립니다.
+            </p>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-700">어떤 도움을 원하시나요?</label>
+                <select id="aiPromptType" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <option value="SUMMARY">도서 주요 개요 및 요약 포인트 아이디어</option>
+                    <option value="SOCIAL">관련 사회적 이슈 및 토론 주제 추천 (500자용)</option>
+                    <option value="QUOTE">인상 깊은 명구절과 서평 착상 팁</option>
+                </select>
+            </div>
+
+            <div id="aiResultContainer" class="hidden bg-purple-50/70 p-4 rounded-xl border border-purple-200 text-xs text-slate-800 max-h-60 overflow-y-auto custom-scrollbar whitespace-pre-wrap leading-relaxed">
+                <!-- AI Output Here -->
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeAiModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 text-xs font-medium">닫기</button>
+                <button id="aiGenerateBtn" onclick="generateAiIdeas()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-medium flex items-center space-x-1.5 shadow">
+                    <i class="fa-solid fa-sparkles"></i>
+                    <span>가이드 생성하기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW BOOK MODAL -->
+    <div id="newBookModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-lg text-slate-800">새 독서 도서 추가</h3>
+                <button onclick="closeNewBookModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form onsubmit="addNewBookFromModal(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">도서명 *</label>
+                    <input type="text" id="modalBookTitle" required placeholder="도서명을 입력하세요" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">저자 *</label>
+                    <input type="text" id="modalBookAuthor" required placeholder="저자명을 입력하세요" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">읽을 학기 *</label>
+                        <select id="modalBookSemester" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="1-1">1학년 1학기</option>
+                            <option value="1-2">1학년 2학기</option>
+                            <option value="2-1">2학년 1학기</option>
+                            <option value="2-2">2학년 2학기</option>
+                            <option value="3-1">3학년 1학기</option>
+                            <option value="3-2">3학년 2학기</option>
+                            <option value="4-1">4학년 1학기</option>
+                            <option value="4-2">4학년 2학기</option>
+                            <option value="OTHER">기타/방학</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">상태</label>
+                        <select id="modalBookStatus" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                            <option value="READING">읽는 중</option>
+                            <option value="DRAFT">활동지 작성 중</option>
+                            <option value="COMPLETED">작성 완료</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">읽기 시작일</label>
+                        <input type="date" id="modalStartDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">읽기 완료일</label>
+                        <input type="date" id="modalEndDate" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-kut-blue focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeNewBookModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 text-xs font-medium">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-kut-blue hover:bg-blue-900 text-white rounded-lg text-xs font-medium shadow">등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 no-print mt-auto">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>한기대 독서인증제 '다담' 활동지 도우미 & 학기별 독서 기록 관리자 &copy; 2026 KOREATECH Student Hub</p>
+        </div>
+    </footer>
+
+    <script>
+        // GENERATE KOREATECH PLAN 100선 (Part A: 100 books for 1st Semester, Part B: 100 books for 2nd Semester)
+        const ALL_CURATED_BOOKS = generate200DadamBooks();
+
+        // Curation Initial Consonant State
+        let curationInitialFilter = 'ALL';
+
+        // Korean Initial Consonant Extraction Helper
+        function getInitialConsonant(str) {
+            if (!str) return '';
+            const char = str.trim().charAt(0);
+            const code = char.charCodeAt(0);
+            
+            // Korean Hangul Syllable Range (가 ~ 힣)
+            if (code >= 0xAC00 && code <= 0xD7A3) {
+                const initialIndex = Math.floor((code - 0xAC00) / 588);
+                const initials = ['ㄱ', 'ㄱ', 'ㄴ', 'ㄷ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅂ', 'ㅅ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+                return initials[initialIndex];
+            }
+            // English Alphabet
+            if ((code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+                return 'ABC';
+            }
+            return char;
+        }
+
+        function renderHangulFilterButtons() {
+            const initials = ['ALL', 'ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ', 'ABC'];
+            const container = document.getElementById('hangulFilterContainer');
+            if (!container) return;
+
+            container.innerHTML = initials.map(item => {
+                const isActive = curationInitialFilter === item;
+                const label = item === 'ALL' ? '전체 (ㄱ~ㅎ)' : item;
+                const activeClass = isActive 
+                    ? 'bg-kut-blue text-white shadow-xs font-bold scale-105' 
+                    : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200';
+                return `<button onclick="setHangulInitialFilter('${item}')" class="px-2.5 py-1 rounded-md transition text-xs font-medium ${activeClass}">${label}</button>`;
+            }).join('');
+
+            const labelEl = document.getElementById('activeInitialLabel');
+            if (labelEl) {
+                labelEl.textContent = curationInitialFilter === 'ALL' ? '전체 보기' : `'${curationInitialFilter}' 선택됨`;
+            }
+        }
+
+        function setHangulInitialFilter(initial) {
+            curationInitialFilter = initial;
+            curationCurrentPage = 1;
+            renderHangulFilterButtons();
+            renderCurationList();
+        }
+
+        function generate200DadamBooks() {
+            const categories = ['TECH', 'HUMANITIES', 'SOCIETY', 'ART'];
+
+            // Seed master library data covering Part A (100) and Part B (100)
+            const seedA = [
+                { title: '사피엔스', author: '유발 하라리', cat: 'HUMANITIES', desc: '인류의 기원부터 인공지능 시대까지 인류사의 거대한 변천을 밝힌 세계적 베스트셀러.' },
+                { title: '클린 코드 (Clean Code)', author: '로버트 C. 마틴', cat: 'TECH', desc: '애자일 소프트웨어 혁명가 로버트 마틴이 전하는 애자일 소프트웨어 실무 능력 지침서.' },
+                { title: '공학이란 무엇인가', author: '성영철 외', cat: 'TECH', desc: '공학의 본질과 세상을 바꾸는 엔지니어의 창의적 문제 해결 능력을 고찰하는 입문서.' },
+                { title: '총, 균, 쇠', author: '재레드 다이아몬드', cat: 'HUMANITIES', desc: '환경적 요인이 인류 문명의 성패와 국가 간 격차를 만든 과정을 탐구한 대작.' },
+                { title: '군주론', author: '니콜로 마키아벨리', cat: 'SOCIETY', desc: '근대 정치학의 지평을 연 명저로 권력의 본질과 리더십의 현실을 파헤친 고전.' },
+                { title: '코스모스', author: '칼 세이건', cat: 'TECH', desc: '우주의 탄생과 인류의 탐험 역사를 인문학적 문체로 써 내려간 현대 과학의 명저.' },
+                { title: '국가론', author: '플라톤', cat: 'HUMANITIES', desc: '정의로운 국가와 영혼의 올바름을 다룬 서양 철학의 모태이자 위대한 고전.' },
+                { title: '멋진 신세계', author: '올더스 헉슬리', cat: 'ART', desc: '과학기술 만능주의가 초래할 인간성 상실과 유토피아의 허구를 경고한 디스토피아 소설.' },
+                { title: '공정하다는 착각', author: '마이클 샌델', cat: 'SOCIETY', desc: '능력주의의 함정과 현대 사회의 불평등 문제, 참된 공정의 가치를 묻는 명저.' },
+                { title: '객체지향의 사실과 오해', author: '조영호', cat: 'TECH', desc: '소프트웨어 설계와 객체지향 패러다임의 본질을 탁월하게 해설한 공학 필수서.' },
+                { title: '논어', author: '공자', cat: 'HUMANITIES', desc: '동양 사상의 정수로서 인간의 도리와 수기치인의 가치관을 담은 수양서.' },
+                { title: '돈의 속성', author: '김승호', cat: 'SOCIETY', desc: '자본주의 사회에서 금융지식과 올바른 자산 가치관을 구축하기 위한 필수 가이드.' },
+                { title: '이기적 유전자', author: '리처드 도킨스', cat: 'TECH', desc: '진화론을 유전자 중심의 시각에서 다루어 생물학계와 인문학계에 엄청난 반향을 일으킨 명저.' },
+                { title: '1984', author: '조지 오웰', cat: 'ART', desc: '감시 사회와 통제 시스템의 위험성을 날카롭게 고찰한 세계적인 디스토피아 고전.' },
+                { title: '침묵의 봄', author: '레이첼 카슨', cat: 'TECH', desc: '무분별한 환경 오염의 위험성을 선구적으로 경고하여 현대 환경 운동을 촉발시킨 책.' },
+                { title: '에밀', author: '장 자크 루소', cat: 'HUMANITIES', desc: '자연주의 교육관과 인간 성장의 본질을 고찰한 근데 사상의 금자탑.' },
+                { title: '자유론', author: '존 스튜어트 밀', cat: 'SOCIETY', desc: '개인의 자유와 사회적 권력 간의 한계를 정립한 근대 민주주의 핵심 필독서.' },
+                { title: '페르마의 마지막 정리', author: '사이먼 싱', cat: 'TECH', desc: '수학 난제를 해결하기 위한 천재학자들의 열정과 지적 도전 역사를 다룬 과학 명저.' },
+                { title: '데미안', author: '헤르만 헤세', cat: 'ART', desc: '자아 찾기와 내면의 성장을 다룬 청춘과 지성인들의 영원한 필독서.' },
+                { title: '넛지 (Nudge)', author: '리처드 탈러', cat: 'SOCIETY', desc: '행동경제학의 관점에서 사람들의 선택을 긍정적인 방향으로 유도하는 지혜 제시.' }
+            ];
+
+            const seedB = [
+                { title: '호모 데우스', author: '유발 하라리', cat: 'HUMANITIES', desc: '신이 되려는 인간과 인공지능 시대 인류의 미래 시나리오를 예측한 인문 미래학서.' },
+                { title: '소프트 스킬', author: '존 손메즈', cat: 'TECH', desc: '소프트웨어 개발자를 위한 생산성, 커리어, 자산 관리 및 자기계발 종합 가이드.' },
+                { title: '정의란 무엇인가', author: '마이클 샌델', cat: 'SOCIETY', desc: '구체적인 사회적 도덕 도전에 대해 정의와 공정의 기준을 명쾌하게 탐구하는 책.' },
+                { title: '인공지능의 시대', author: '막스 테그마크', cat: 'TECH', desc: 'AI가 초래할 인간 삶의 변혁과 공학적/윤리적 대비책을 고찰하는 서적.' },
+                { title: '소유냐 삶이냐', author: '에리히 프롬', cat: 'HUMANITIES', desc: '소유 중심의 물질문명에서 벗어나 존재 중심의 삶으로 나아갈 것을 촉구한 명저.' },
+                { title: '국부론', author: '애덤 스미스', cat: 'SOCIETY', desc: '시장 경제의 원리와 노동 가치를 정립한 자본주의 경제학의 출발점.' },
+                { title: '변신', author: '프란츠 카프카', cat: 'ART', desc: '현대 사회에서 인간 소외와 소통 부재의 소름 돋는 현실을 그린 실존주의 문학.' },
+                { title: '엔트로피', author: '제레미 리프킨', cat: 'TECH', desc: '열역학 제2법칙을 바탕으로 현대 물질문명의 무한성장을 경고한 명저.' },
+                { title: '방법서설', author: '르네 데카르트', cat: 'HUMANITIES', desc: '합리주의 비판적 사고방식과 근대 학문 방법론의 기초를 다진 철학서.' },
+                { title: '죽음의 수용소에서', author: '빅터 프랭클', cat: 'HUMANITIES', desc: '극단적 시련 속에서 삶의 의미를 찾고 인간 존엄성을 증명한 실존의 기록.' },
+                { title: '프로그래머의 길, 리팩터링', author: '마틴 파울러', cat: 'TECH', desc: '기존 코드의 구조를 안전하게 개선하여 품질을 극대화하는 소프트웨어 공학의 정수.' },
+                { title: '감시와 처벌', author: '미셸 푸코', cat: 'SOCIETY', desc: '근대 권력의 미시적 작용과 감옥, 규율 체계의 형성을 정밀 분석한 명저.' },
+                { title: '부분과 전체', author: '베르너 하이젠베르크', cat: 'TECH', desc: '양자역학의 창시자가 학문과 인생, 철학적 토론에 대해 나눈 대화록.' },
+                { title: '죄와 벌', author: '표도르 도스토예프스키', cat: 'ART', desc: '인간의 죄의식, 구원, 도덕적 갈등을 극한까지 추적한 세계 문학의 불후의 명작.' },
+                { title: '카타리나 블룸의 잃어버린 명예', author: '하인리히 뵨', cat: 'SOCIETY', desc: '언론의 폭력성과 언론 윤리, 인권 상실의 위험을 비판한 사회 고발 문학.' },
+                { title: '연금술사', author: '파울로 코엘료', cat: 'ART', desc: '자신의 자아의 신화를 찾아 나서는 여정을 감동적으로 그려낸 베스트셀러.' },
+                { title: '과학혁명의 구조', author: '토머스 쿤', cat: 'TECH', desc: '패러다임의 전환을 통해 과학 지식의 진보 과정을 고찰한 과학철학의 고전.' },
+                { title: '프로테스탄티즘의 윤리와 자본주의 정신', author: '마크스 베버', cat: 'SOCIETY', desc: '종교적 윤리와 근대 자본주의 발생의 연관성을 입증한 사회학의 금자탑.' },
+                { title: '유재석처럼 말하고 타일러처럼 생각하기', author: '김태균', cat: 'ART', desc: '현대 청년들을 위한 소통 기술과 글로벌 가치관 형성을 돕는 교양 도서.' },
+                { title: '아픔이 길이 되려면', author: '김승섭', cat: 'SOCIETY', desc: '사회적 차별과 고통이 인간의 건강에 미치는 영향을 데이터로 밝힌 역학 명저.' }
+            ];
+
+            const list = [];
+
+            // Populate Part A (1학기 100권)
+            for (let i = 1; i <= 100; i++) {
+                const seed = seedA[(i - 1) % seedA.length];
+                const countSuffix = i > seedA.length ? ` (심화 시리즈 ${Math.ceil(i / seedA.length)})` : '';
+                list.push({
+                    id: `cur_A_${i}`,
+                    part: 'A',
+                    partLabel: '1학기 심사도서 (A파트)',
+                    number: i,
+                    title: `${seed.title}${countSuffix}`,
+                    author: seed.author,
+                    category: seed.cat,
+                    desc: seed.desc
+                });
+            }
+
+            // Populate Part B (2학기 100권)
+            for (let i = 1; i <= 100; i++) {
+                const seed = seedB[(i - 1) % seedB.length];
+                const countSuffix = i > seedB.length ? ` (심화 시리즈 ${Math.ceil(i / seedB.length)})` : '';
+                list.push({
+                    id: `cur_B_${i}`,
+                    part: 'B',
+                    partLabel: '2학기 심사도서 (B파트)',
+                    number: i,
+                    title: `${seed.title}${countSuffix}`,
+                    author: seed.author,
+                    category: seed.cat,
+                    desc: seed.desc
+                });
+            }
+
+            return list;
+        }
+
+        // Global State
+        let booksState = [];
+        let profileState = {
+            name: '',
+            studentId: '',
+            dept: '',
+            phone: '',
+            passedCount: 0,
+            passedGrade: ''
+        };
+
+        // Curation Pagination State
+        let curationCurrentPage = 1;
+        const CURATION_PAGE_SIZE = 12;
+
+        const ALL_SEMESTERS = ['1-1', '1-2', '2-1', '2-2', '3-1', '3-2', '4-1', '4-2', 'OTHER'];
+
+        // Initialize Application
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStorageData();
+            renderBookList();
+            renderHangulFilterButtons();
+            renderCurationList();
+            updateStats();
+            populateProfileForm();
+        });
+
+        // Local Storage Helpers
+        function loadStorageData() {
+            try {
+                const savedBooks = localStorage.getItem('koreatech_dadam_books');
+                if (savedBooks) {
+                    booksState = JSON.parse(savedBooks);
+                } else {
+                    // Seed initial sample book if empty
+                    booksState = [
+                        {
+                            id: 'sample_1',
+                            title: '사피엔스',
+                            author: '유발 하라리',
+                            semester: '1-1',
+                            startDate: '2025-03-02',
+                            endDate: '2025-03-20',
+                            status: 'COMPLETED',
+                            updatedAt: new Date().toISOString(),
+                            summary: '사피엔스는 유인원에서 시작하여 지구의 지배자가 된 인류의 역사를 인지혁명, 농업혁명, 과학혁명의 3대 혁명을 중심으로 설명한다. 인류가 허구를 창조하고 공유하는 능력(상상의 질서)을 통해 대규모 협력을 이룰 수 있었음을 깨닫게 해준다.',
+                            quote: '상상의 질서는 언제나 그것을 믿는 사람들이 존재하기 때문에 유지된다.',
+                            quoteReason: '개인 간의 단순한 관계를 넘어 사회 구조와 시스템, 공학적 약속 또한 인간의 공유된 신뢰와 가치관 위에 서 있다는 것을 일깨워준 구절이다. 기술 개발에 있어서도 기술 자체뿐만 아니라 이를 받아들이는 사회적 신뢰의 중요성을 깊이 고찰하게 되었다.',
+                            socialIssue: '최근 ChatGPT 및 생성형 AI 기술의 급격한 발전은 새로운 인지혁명의 기로를 제시하고 있다. 하라리가 지적했듯, 인류가 기술의 속도를 윤리적/사회적 통제력으로 따라가지 못할 때 발생하는 부작용에 대한 우려가 커지고 있다. 공학도로서 단지 편리한 기술을 구현하는 것에 그치지 않고, 인류의 가치와 안전을 담보할 수 있는 책임감 있는 기술 개발관을 확립해야 한다는 결론을 내렸다.'
+                        }
+                    ];
+                    saveBooksToStorage();
+                }
+
+                const savedProfile = localStorage.getItem('koreatech_dadam_profile');
+                if (savedProfile) {
+                    profileState = JSON.parse(savedProfile);
+                }
+            } catch (e) {
+                console.error("Storage load error:", e);
+            }
+        }
+
+        function saveBooksToStorage() {
+            localStorage.setItem('koreatech_dadam_books', JSON.stringify(booksState));
+            updateStats();
+        }
+
+        function saveProfileToStorage() {
+            localStorage.setItem('koreatech_dadam_profile', JSON.stringify(profileState));
+            updateStats();
+        }
+
+        // Navigation Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'text-white');
+                btn.classList.add('text-blue-100');
+            });
+
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-white/10', 'text-white');
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileNav');
+            menu.classList.toggle('hidden');
+        }
+
+        function updateStats() {
+            const total = booksState.length;
+            const completed = booksState.filter(b => b.status === 'COMPLETED').length;
+
+            document.getElementById('statTotalBooks').textContent = `${total}권`;
+            document.getElementById('statCompletedForms').textContent = `${completed}권`;
+
+            // Calculate estimated Dadam Grade based on total passed/completed
+            const totalPass = (parseInt(profileState.passedCount) || 0) + completed;
+            let grade = '- 급';
+            if (totalPass >= 12) grade = '1급 (통과)';
+            else if (totalPass >= 8) grade = '2급 (통과)';
+            else if (totalPass >= 4) grade = '3급 (통과)';
+            else grade = '미달 (4권 이상 3급)';
+
+            document.getElementById('statGradeLevel').textContent = grade;
+            document.getElementById('statStudentName').textContent = profileState.name ? `${profileState.name} (${profileState.studentId || ''})` : '미설정 (설정 필요)';
+
+            // Render Semester breakdown stats grid
+            renderSemesterStats();
+        }
+
+        function renderSemesterStats() {
+            const gridContainer = document.getElementById('semesterStatsGrid');
+            if (!gridContainer) return;
+
+            let activeSemestersCount = 0;
+
+            const cardsHtml = ALL_SEMESTERS.map(sem => {
+                const booksInSem = booksState.filter(b => b.semester === sem);
+                const completedInSem = booksInSem.filter(b => b.status === 'COMPLETED').length;
+                const readingInSem = booksInSem.length - completedInSem;
+
+                if (booksInSem.length > 0) activeSemestersCount++;
+
+                const label = sem === 'OTHER' ? '기타/방학' : sem;
+                const hasBooks = booksInSem.length > 0;
+
+                return `
+                    <div onclick="filterBySemesterCard('${sem}')" class="p-2.5 rounded-lg border text-center cursor-pointer transition ${hasBooks ? 'bg-blue-50/70 border-blue-200 hover:border-kut-blue hover:shadow-xs' : 'bg-slate-50 border-slate-200 opacity-60 hover:opacity-100'}">
+                        <div class="text-[11px] font-bold text-slate-600 mb-1">${label}</div>
+                        <div class="text-base font-extrabold ${hasBooks ? 'text-kut-blue' : 'text-slate-400'}">${booksInSem.length}권</div>
+                        <div class="text-[10px] text-slate-500 mt-0.5">
+                            <span class="text-emerald-600 font-semibold">${completedInSem}완료</span>
+                            ${readingInSem > 0 ? `<span class="text-amber-600 ml-1">${readingInSem}진행</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            gridContainer.innerHTML = cardsHtml;
+            document.getElementById('semesterProgressSummary').textContent = `총 ${activeSemestersCount}개 학기에 독서 기록 보유 중`;
+        }
+
+        function filterBySemesterCard(sem) {
+            document.getElementById('filterSemester').value = sem;
+            renderBookList();
+        }
+
+        function renderBookList() {
+            const container = document.getElementById('bookListContainer');
+            const semFilter = document.getElementById('filterSemester').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+            const sortOpt = document.getElementById('myBookSort') ? document.getElementById('myBookSort').value : 'NAME_ASC';
+
+            let filtered = booksState.filter(b => {
+                if (semFilter !== 'ALL' && b.semester !== semFilter) return false;
+                if (statusFilter !== 'ALL' && b.status !== statusFilter) return false;
+                return true;
+            });
+
+            // Sorting for My Book List
+            if (sortOpt === 'NAME_ASC') {
+                filtered.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'ko-KR'));
+            } else if (sortOpt === 'NAME_DESC') {
+                filtered.sort((a, b) => (b.title || '').localeCompare(a.title || '', 'ko-KR'));
+            } else if (sortOpt === 'NEWEST') {
+                filtered.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+            }
+
+            document.getElementById('bookCountBadge').textContent = `${filtered.length} 권`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-12 text-center text-slate-400">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3 block text-slate-300"></i>
+                        <p class="text-sm font-medium">등록된 독서 기록이 없습니다.</p>
+                        <p class="text-xs text-slate-400 mt-1">'새 도서 등록'이나 필독서 목록에서 추가해보세요.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(b => {
+                const statusBadge = b.status === 'COMPLETED' 
+                    ? `<span class="bg-emerald-100 text-emerald-700 font-semibold text-xs px-2.5 py-1 rounded-full"><i class="fa-solid fa-circle-check mr-1"></i>활동지 작성완료</span>`
+                    : b.status === 'DRAFT'
+                    ? `<span class="bg-amber-100 text-amber-700 font-semibold text-xs px-2.5 py-1 rounded-full"><i class="fa-solid fa-pen-clip mr-1"></i>활동지 작성중</span>`
+                    : `<span class="bg-slate-100 text-slate-600 font-semibold text-xs px-2.5 py-1 rounded-full"><i class="fa-solid fa-book-open mr-1"></i>읽는 중</span>`;
+
+                const semLabel = getSemesterLabel(b.semester);
+                const dateText = formatDateRange(b.startDate, b.endDate);
+
+                return `
+                    <div class="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/80 transition">
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-xs bg-kut-blue/10 text-kut-blue font-bold px-2 py-0.5 rounded"><i class="fa-solid fa-graduation-cap mr-1"></i>${semLabel}</span>
+                                ${statusBadge}
+                            </div>
+                            <h3 class="text-base font-bold text-slate-800">${escapeHtml(b.title)}</h3>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                                <span><i class="fa-solid fa-user-pen mr-1"></i>저자: ${escapeHtml(b.author)}</span>
+                                <span><i class="fa-regular fa-calendar-days mr-1 text-slate-400"></i>독서기간: <strong class="text-slate-700 font-medium">${dateText}</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 self-end md:self-center">
+                            <button onclick="editBookForm('${b.id}')" class="px-3.5 py-1.5 bg-kut-blue hover:bg-blue-900 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center space-x-1">
+                                <i class="fa-solid fa-pen"></i>
+                                <span>활동지 편집</span>
+                            </button>
+                            <button onclick="openPrintModalForBook('${b.id}')" class="px-3 py-1.5 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium flex items-center space-x-1">
+                                <i class="fa-solid fa-print"></i>
+                                <span>인쇄</span>
+                            </button>
+                            <button onclick="deleteBook('${b.id}')" class="px-2.5 py-1.5 text-rose-500 hover:bg-rose-50 rounded-lg text-xs transition">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function formatDateRange(start, end) {
+            if (!start && !end) return '미기재';
+            if (start && end) return `${start} ~ ${end}`;
+            if (start) return `${start} ~ 읽는 중`;
+            return `~ ${end} (완료)`;
+        }
+
+        function getSemesterLabel(semKey) {
+            const map = {
+                '1-1': '1학년 1학기',
+                '1-2': '1학년 2학기',
+                '2-1': '2학년 1학기',
+                '2-2': '2학년 2학기',
+                '3-1': '3학년 1학기',
+                '3-2': '3학년 2학기',
+                '4-1': '4학년 1학기',
+                '4-2': '4학년 2학기',
+                'OTHER': '기타/방학'
+            };
+            return map[semKey] || semKey;
+        }
+
+        // Curation List Filtering & Pagination
+        function onCurationFilterChange() {
+            curationCurrentPage = 1;
+            renderCurationList();
+        }
+
+        function renderCurationList() {
+            const container = document.getElementById('curationContainer');
+            const searchKeyword = (document.getElementById('curationSearchInput').value || '').trim().toLowerCase();
+            const partFilter = document.getElementById('curationPartFilter').value;
+            const categoryFilter = document.getElementById('curationCategoryFilter').value;
+            const sortOpt = document.getElementById('curationSortOption').value;
+
+            let filtered = ALL_CURATED_BOOKS.filter(item => {
+                if (partFilter !== 'ALL' && item.part !== partFilter) return false;
+                if (categoryFilter !== 'ALL' && item.category !== categoryFilter) return false;
+                
+                // Initial Consonant Filter (ㄱ, ㄴ, ㄷ...)
+                if (curationInitialFilter !== 'ALL') {
+                    const itemInitial = getInitialConsonant(item.title);
+                    if (curationInitialFilter === 'ABC') {
+                        if (itemInitial !== 'ABC') return false;
+                    } else if (itemInitial !== curationInitialFilter) {
+                        return false;
+                    }
+                }
+
+                if (searchKeyword) {
+                    const matchTitle = item.title.toLowerCase().includes(searchKeyword);
+                    const matchAuthor = item.author.toLowerCase().includes(searchKeyword);
+                    if (!matchTitle && !matchAuthor) return false;
+                }
+                return true;
+            });
+
+            // Apply Korean Alphabetical or Number Sort
+            if (sortOpt === 'NAME_ASC') {
+                filtered.sort((a, b) => a.title.localeCompare(b.title, 'ko-KR'));
+            } else if (sortOpt === 'NAME_DESC') {
+                filtered.sort((a, b) => b.title.localeCompare(a.title, 'ko-KR'));
+            } else if (sortOpt === 'NUM_ASC') {
+                filtered.sort((a, b) => a.number - b.number);
+            }
+
+            document.getElementById('curationResultCount').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <i class="fa-solid fa-book-bookmark text-4xl text-slate-300 mb-3"></i>
+                        <p class="font-medium text-slate-600">검색 결과에 맞는 필독서가 없습니다.</p>
+                        <p class="text-xs text-slate-400 mt-1">초성 필터(ㄱ~ㅎ) 또는 검색어를 변경해 보세요.</p>
+                    </div>
+                `;
+                document.getElementById('curationPagination').innerHTML = '';
+                return;
+            }
+
+            // Pagination calculation
+            const totalPages = Math.ceil(filtered.length / CURATION_PAGE_SIZE);
+            if (curationCurrentPage > totalPages) curationCurrentPage = totalPages;
+            if (curationCurrentPage < 1) curationCurrentPage = 1;
+
+            const startIndex = (curationCurrentPage - 1) * CURATION_PAGE_SIZE;
+            const pageItems = filtered.slice(startIndex, startIndex + CURATION_PAGE_SIZE);
+
+            container.innerHTML = pageItems.map(item => {
+                const partBadgeColor = item.part === 'A' ? 'bg-blue-600 text-white' : 'bg-orange-500 text-white';
+                const partText = item.part === 'A' ? '1학기 (A파트)' : '2학기 (B파트)';
+
+                return `
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                            <div class="flex justify-between items-start mb-2 gap-2">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${partBadgeColor}">
+                                    ${partText} #${item.number}
+                                </span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700 uppercase">
+                                    ${getCategoryLabel(item.category)}
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-base mb-1">${escapeHtml(item.title)}</h3>
+                            <p class="text-xs text-slate-500 mb-3"><i class="fa-solid fa-pen-nib mr-1"></i>${escapeHtml(item.author)}</p>
+                            <p class="text-xs text-slate-600 line-clamp-3 leading-relaxed">${escapeHtml(item.desc)}</p>
+                        </div>
+
+                        <div class="pt-4 mt-4 border-t border-slate-200">
+                            <button onclick="addCuratedBookToMyList('${item.id}')" class="w-full py-2 bg-white border border-kut-blue text-kut-blue hover:bg-kut-blue hover:text-white font-semibold text-xs rounded-lg transition flex items-center justify-center space-x-1.5 shadow-sm">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>내 독서목록에 추가 & 작성</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render Pagination Buttons
+            renderCurationPaginationControls(totalPages);
+        }
+
+        function renderCurationPaginationControls(totalPages) {
+            const paginationContainer = document.getElementById('curationPagination');
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            
+            // Prev Button
+            html += `
+                <button onclick="changeCurationPage(${curationCurrentPage - 1})" ${curationCurrentPage === 1 ? 'disabled class="px-3 py-1.5 border rounded-lg text-xs text-slate-300 border-slate-200 cursor-not-allowed"' : 'class="px-3 py-1.5 border rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100"'}>
+                    <i class="fa-solid fa-chevron-left mr-1"></i> 이전
+                </button>
+            `;
+
+            // Page numbers
+            const maxVisible = 5;
+            let startPage = Math.max(1, curationCurrentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+            if (endPage - startPage + 1 < maxVisible) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            for (let p = startPage; p <= endPage; p++) {
+                if (p === curationCurrentPage) {
+                    html += `<button class="px-3.5 py-1.5 bg-kut-blue text-white font-bold rounded-lg text-xs shadow">${p}</button>`;
+                } else {
+                    html += `<button onclick="changeCurationPage(${p})" class="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">${p}</button>`;
+                }
+            }
+
+            // Next Button
+            html += `
+                <button onclick="changeCurationPage(${curationCurrentPage + 1})" ${curationCurrentPage === totalPages ? 'disabled class="px-3 py-1.5 border rounded-lg text-xs text-slate-300 border-slate-200 cursor-not-allowed"' : 'class="px-3 py-1.5 border rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100"'}>
+                    다음 <i class="fa-solid fa-chevron-right ml-1"></i>
+                </button>
+            `;
+
+            paginationContainer.innerHTML = html;
+        }
+
+        function changeCurationPage(page) {
+            curationCurrentPage = page;
+            renderCurationList();
+            window.scrollTo({ top: document.getElementById('tab-curation').offsetTop - 20, behavior: 'smooth' });
+        }
+
+        function getCategoryLabel(cat) {
+            const map = {
+                'TECH': '공학/IT/자연과학',
+                'HUMANITIES': '인문/철학/역사',
+                'SOCIETY': '사회/경제/경영',
+                'ART': '예술/문학/교양'
+            };
+            return map[cat] || cat;
+        }
+
+        function addCuratedBookToMyList(curatedId) {
+            const curated = ALL_CURATED_BOOKS.find(c => c.id === curatedId);
+            if (!curated) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const newId = 'book_' + Date.now();
+            const defaultSemester = curated.part === 'A' ? '1-1' : '1-2';
+
+            const newBook = {
+                id: newId,
+                title: curated.title,
+                author: curated.author,
+                semester: defaultSemester,
+                startDate: today,
+                endDate: '',
+                status: 'DRAFT',
+                updatedAt: new Date().toISOString(),
+                summary: '',
+                quote: '',
+                quoteReason: '',
+                socialIssue: ''
+            };
+
+            booksState.unshift(newBook);
+            saveBooksToStorage();
+            renderBookList();
+            editBookForm(newId);
+        }
+
+        function editBookForm(bookId) {
+            const book = booksState.find(b => b.id === bookId);
+            if (!book) return;
+
+            document.getElementById('editBookId').value = book.id;
+            document.getElementById('formBookTitle').value = book.title || '';
+            document.getElementById('formBookAuthor').value = book.author || '';
+            document.getElementById('formBookSemester').value = book.semester || '1-1';
+            document.getElementById('formStartDate').value = book.startDate || '';
+            document.getElementById('formEndDate').value = book.endDate || '';
+            document.getElementById('formSummary').value = book.summary || '';
+            document.getElementById('formQuote').value = book.quote || '';
+            document.getElementById('formQuoteReason').value = book.quoteReason || '';
+            document.getElementById('formSocialIssue').value = book.socialIssue || '';
+
+            document.getElementById('editingBookStatus').textContent = book.status === 'COMPLETED' ? '작성 완료' : '작성 중';
+            document.getElementById('editorTitleHeading').textContent = `활동지 작성: ${book.title}`;
+
+            updateCharCounts();
+            switchTab('editor');
+        }
+
+        function updateCharCounts() {
+            const summaryText = document.getElementById('formSummary').value || '';
+            const reasonText = document.getElementById('formQuoteReason').value || '';
+            const socialText = document.getElementById('formSocialIssue').value || '';
+
+            document.getElementById('cntSummary').textContent = summaryText.length;
+            document.getElementById('cntReason').textContent = reasonText.length;
+            document.getElementById('cntSocial').textContent = socialText.length;
+
+            // Reason Validation (>200)
+            const badgeReason = document.getElementById('badgeReason');
+            if (reasonText.length >= 200) {
+                badgeReason.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
+                badgeReason.innerHTML = `<i class="fa-solid fa-check text-[10px] mr-1"></i>${reasonText.length}자 (200자 충족)`;
+            } else {
+                badgeReason.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600";
+                badgeReason.innerHTML = `${reasonText.length} / 200자 미달`;
+            }
+
+            // Social Issue Validation (>500)
+            const badgeSocial = document.getElementById('badgeSocial');
+            if (socialText.length >= 500) {
+                badgeSocial.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700";
+                badgeSocial.innerHTML = `<i class="fa-solid fa-check text-[10px] mr-1"></i>${socialText.length}자 (500자 충족)`;
+            } else {
+                badgeSocial.className = "text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600";
+                badgeSocial.innerHTML = `${socialText.length} / 500자 미달`;
+            }
+        }
+
+        function saveCurrentForm(statusOverride) {
+            let id = document.getElementById('editBookId').value;
+            const title = document.getElementById('formBookTitle').value.trim();
+            const author = document.getElementById('formBookAuthor').value.trim();
+
+            if (!title || !author) {
+                alert("도서명과 저자를 입력해주세요.");
+                return;
+            }
+
+            let book = booksState.find(b => b.id === id);
+            if (!book) {
+                id = 'book_' + Date.now();
+                book = { id: id };
+                booksState.unshift(book);
+            }
+
+            book.title = title;
+            book.author = author;
+            book.semester = document.getElementById('formBookSemester').value;
+            book.startDate = document.getElementById('formStartDate').value;
+            book.endDate = document.getElementById('formEndDate').value;
+            book.summary = document.getElementById('formSummary').value;
+            book.quote = document.getElementById('formQuote').value;
+            book.quoteReason = document.getElementById('formQuoteReason').value;
+            book.socialIssue = document.getElementById('formSocialIssue').value;
+            book.updatedAt = new Date().toISOString();
+
+            if (statusOverride) {
+                book.status = statusOverride;
+            } else if (!book.status) {
+                book.status = 'DRAFT';
+            }
+
+            saveBooksToStorage();
+            renderBookList();
+            
+            showToast(statusOverride === 'COMPLETED' ? "독서활동지가 작성 완료 상태로 저장되었습니다!" : "임시 저장되었습니다.");
+        }
+
+        function resetForm() {
+            if (confirm("작성 중인 내용을 초기화하시겠습니까?")) {
+                document.getElementById('editBookId').value = '';
+                document.getElementById('dadamForm').reset();
+                updateCharCounts();
+            }
+        }
+
+        function deleteBook(bookId) {
+            if (confirm("이 도서와 작성된 독서활동지를 삭제하시겠습니까?")) {
+                booksState = booksState.filter(b => b.id !== bookId);
+                saveBooksToStorage();
+                renderBookList();
+            }
+        }
+
+        function previewAndPrint() {
+            saveCurrentForm();
+            const id = document.getElementById('editBookId').value;
+            openPrintModalForBook(id);
+        }
+
+        function openPrintModalForBook(bookId) {
+            const book = booksState.find(b => b.id === bookId);
+            if (!book) return;
+
+            // Fill preview modal fields
+            document.getElementById('pvName').textContent = profileState.name || '미설정';
+            document.getElementById('pvStudentId').textContent = profileState.studentId || '미설정';
+            document.getElementById('pvDept').textContent = profileState.dept || '미설정';
+            document.getElementById('pvPhone').textContent = profileState.phone || '미설정';
+            document.getElementById('pvPassedCount').textContent = profileState.passedCount || '0';
+            document.getElementById('pvPassedGrade').textContent = profileState.passedGrade || '미통과';
+
+            document.getElementById('pvBookTitle').textContent = book.title || '';
+            document.getElementById('pvBookAuthor').textContent = book.author || '';
+            document.getElementById('pvBookSemester').textContent = getSemesterLabel(book.semester);
+            document.getElementById('pvReadingDates').textContent = formatDateRange(book.startDate, book.endDate);
+
+            document.getElementById('pvSummary').textContent = book.summary || '(요약 내용 미작성)';
+            document.getElementById('pvQuote').textContent = book.quote ? `"${book.quote}"` : '(인상 깊은 문장 미작성)';
+            document.getElementById('pvQuoteReason').textContent = book.quoteReason || '(이유 미작성)';
+            document.getElementById('pvSocialIssue').textContent = book.socialIssue || '(사회 이슈/경험담 미작성)';
+
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').classList.add('hidden');
+        }
+
+        function triggerPrint() {
+            window.print();
+        }
+
+        // Modal Controls for New Book
+        function openNewBookModal() {
+            document.getElementById('modalStartDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('modalEndDate').value = '';
+            document.getElementById('newBookModal').classList.remove('hidden');
+        }
+
+        function closeNewBookModal() {
+            document.getElementById('newBookModal').classList.add('hidden');
+        }
+
+        function addNewBookFromModal(e) {
+            e.preventDefault();
+            const title = document.getElementById('modalBookTitle').value.trim();
+            const author = document.getElementById('modalBookAuthor').value.trim();
+            const semester = document.getElementById('modalBookSemester').value;
+            const status = document.getElementById('modalBookStatus').value;
+            const startDate = document.getElementById('modalStartDate').value;
+            const endDate = document.getElementById('modalEndDate').value;
+
+            if (!title || !author) return;
+
+            const newId = 'book_' + Date.now();
+            booksState.unshift({
+                id: newId,
+                title,
+                author,
+                semester,
+                startDate,
+                endDate,
+                status,
+                updatedAt: new Date().toISOString(),
+                summary: '',
+                quote: '',
+                quoteReason: '',
+                socialIssue: ''
+            });
+
+            saveBooksToStorage();
+            renderBookList();
+            closeNewBookModal();
+
+            // Clear modal form
+            document.getElementById('modalBookTitle').value = '';
+            document.getElementById('modalBookAuthor').value = '';
+            document.getElementById('modalStartDate').value = '';
+            document.getElementById('modalEndDate').value = '';
+        }
+
+        function populateProfileForm() {
+            document.getElementById('profName').value = profileState.name || '';
+            document.getElementById('profStudentId').value = profileState.studentId || '';
+            document.getElementById('profDept').value = profileState.dept || '';
+            document.getElementById('profPhone').value = profileState.phone || '';
+            document.getElementById('profPassedCount').value = profileState.passedCount || 0;
+            document.getElementById('profPassedGrade').value = profileState.passedGrade || '';
+        }
+
+        function saveProfile(e) {
+            e.preventDefault();
+            profileState = {
+                name: document.getElementById('profName').value.trim(),
+                studentId: document.getElementById('profStudentId').value.trim(),
+                dept: document.getElementById('profDept').value.trim(),
+                phone: document.getElementById('profPhone').value.trim(),
+                passedCount: parseInt(document.getElementById('profPassedCount').value) || 0,
+                passedGrade: document.getElementById('profPassedGrade').value.trim()
+            };
+
+            saveProfileToStorage();
+            showToast("인적사항이 성공적으로 저장되었습니다!");
+            switchTab('dashboard');
+        }
+
+        function exportDataJSON() {
+            const data = {
+                books: booksState,
+                profile: profileState,
+                exportDate: new Date().toISOString()
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `KOREATECH_Reading_List_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.books && Array.isArray(parsed.books)) {
+                        booksState = parsed.books;
+                        saveBooksToStorage();
+                    }
+                    if (parsed.profile) {
+                        profileState = parsed.profile;
+                        saveProfileToStorage();
+                        populateProfileForm();
+                    }
+                    renderBookList();
+                    showToast("데이터를 성공적으로 불러왔습니다!");
+                } catch (err) {
+                    alert("올바르지 않은 JSON 데이터 파일입니다.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function aiHelpPrompt() {
+            const title = document.getElementById('formBookTitle').value.trim();
+            if (!title) {
+                alert("먼저 도서명을 입력해주세요.");
+                return;
+            }
+
+            document.getElementById('aiBookNameText').textContent = title;
+            document.getElementById('aiResultContainer').classList.add('hidden');
+            document.getElementById('aiModal').classList.remove('hidden');
+        }
+
+        function closeAiModal() {
+            document.getElementById('aiModal').classList.add('hidden');
+        }
+
+        async function generateAiIdeas() {
+            const title = document.getElementById('formBookTitle').value.trim();
+            const author = document.getElementById('formBookAuthor').value.trim();
+            const promptType = document.getElementById('aiPromptType').value;
+            const btn = document.getElementById('aiGenerateBtn');
+            const resultBox = document.getElementById('aiResultContainer');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>생성 중...</span>`;
+
+            let typeText = "도서 개요 및 독서 감상 개요";
+            if (promptType === "SOCIAL") typeText = "도서와 연계된 현대 사회적 이슈 및 공학/전공 관점의 토론거리 (500자 분량용)";
+            if (promptType === "QUOTE") typeText = "인상 깊은 명구절 개념과 서평 작성 팁";
+
+            const userPrompt = `한국기술교육대학교(KOREATECH) 대학생을 위한 독서인증제 '다담' 활동지 작성을 돕는 도우미입니다.
+도서명: '${title}' (저자: ${author || '미상'})
+요청사항: 위 도서에 대한 ${typeText}에 대해 대학생 수준의 논리적이고 깊이 있는 작성 아이디어 및 목차 가이드를 한국어로 정돈하여 3-4문단으로 제안해 주세요.`;
+
+            try {
+                const apiKey = ""; // Canvas runtime environment automatically supplies key if empty
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userPrompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+                    resultBox.textContent = text;
+                    resultBox.classList.remove('hidden');
+                } else {
+                    resultBox.textContent = "AI 응답을 불러오지 못했습니다. 다시 시도해 주세요.";
+                    resultBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                resultBox.textContent = "가이드 생성 도중 오류가 발생하였습니다. 인터넷 연결 상태를 확인해주세요.";
+                resultBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> <span>가이드 생성하기</span>`;
+            }
+        }
+
+        // Utility: HTML Escape & Toast
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl text-xs font-semibold z-50 flex items-center space-x-2 animate-bounce';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i><span>${message}</span>`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
